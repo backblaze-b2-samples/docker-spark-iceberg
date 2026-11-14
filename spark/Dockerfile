@@ -42,6 +42,11 @@ RUN curl https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3
   && python3 install.py --sys-prefix \
   && rm ijava-1.3.0.zip
 
+# Spark on JDK 17 needs the same --add-opens flags spark-submit passes
+RUN python3 -c "import json; p='/usr/local/share/jupyter/kernels/java/kernel.json'; k=json.load(open(p)); \
+mods=['java.lang','java.lang.invoke','java.lang.reflect','java.io','java.net','java.nio','java.util','java.util.concurrent','java.util.concurrent.atomic','jdk.internal.ref','sun.nio.ch','sun.nio.cs','sun.security.action','sun.util.calendar']; \
+k['argv']=k['argv'][:1]+['--add-opens=java.base/'+m+'=ALL-UNNAMED' for m in mods]+k['argv'][1:]; json.dump(k, open(p, 'w'), indent=4)"
+
 # Optional env variables
 ENV SPARK_HOME=${SPARK_HOME:-"/opt/spark"}
 ENV PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip:$PYTHONPATH
